@@ -101,14 +101,6 @@ If you'd like to run or demo the project in **Google Colab**, we have an **inter
 
 [**Open the Colab Notebook here!**](https://colab.research.google.com/drive/1UCl0LNdFOJXsnsSumb6awv7aHiSWzAC6?usp=sharing)
 
-*(Replace the above link with an actual link to your Colab notebook once you create one.)*
-
-Below is a **placeholder** screenshot of the ipywidgets form we created:
-
-```
-[Screenshot placeholder: a UI with fields for N, K, alpha, gamma, episodes, checkboxes for "Load pretrained", "Save agent", "Show demo", "Play vs Agent", etc.]
-```
-
 ---
 
 ## Why This Matters
