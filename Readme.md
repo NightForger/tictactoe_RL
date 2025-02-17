@@ -1,10 +1,10 @@
-# TicTacToe \(N \times N\) with K-in-a-row using Two-Step Q-Learning
+# TicTacToe \(NxN\) with K-in-a-row using Two-Step Q-Learning
 
-This repository implements a generalized Tic-Tac-Toe environment for an \(N \times N\) board, where a player must align \(K\) marks in a row (horizontally, vertically, or diagonally) to win. We focus on **reinforcement learning** approaches, specifically **two-step Q-Learning** with **reward shaping** and an **aggressive opponent** for self-play in 10% of episodes.
+This repository implements a generalized Tic-Tac-Toe environment for an \(NxN\) board, where a player must align \(K\) marks in a row (horizontally, vertically, or diagonally) to win. We focus on **reinforcement learning** approaches, specifically **two-step Q-Learning** with **reward shaping** and an **aggressive opponent** for self-play in 10% of episodes.
 
 ## Why this is Hard
 
-In the classic \(3 \times 3\) Tic-Tac-Toe with \(K=3\), simple one-step Q-Learning can eventually learn to block the opponent's immediate threat and/or create a winning alignment. However, when \(N > K\) (for example, a \(5 \times 5\) board with \(K=4\)), **one-step** Q-Learning fails to see multi-step threats. Often, you need to **block** your opponent **two or more moves** in advance. A purely 1-step method:
+In the classic \(3x3\) Tic-Tac-Toe with \(K=3\), simple one-step Q-Learning can eventually learn to block the opponent's immediate threat and/or create a winning alignment. However, when \(N > K\) (for example, a \(5x5\) board with \(K=4\)), **one-step** Q-Learning fails to see multi-step threats. Often, you need to **block** your opponent **two or more moves** in advance. A purely 1-step method:
 
 - Only sees \(r_{t+1}\) or the immediate next state's Q-values.
 - Fails to anticipate that ignoring a partially formed diagonal can lead to a forced loss in 2-3 turns.
