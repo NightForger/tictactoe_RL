@@ -62,7 +62,6 @@ We also have placeholders for **pretrained agents**:
 - `agent_3_3.pkl` (for 3x3 with K=3)
 - `agent_4_4.pkl` (for 4x4 with K=4)
 - `agent_5_4.pkl` (for 5x5 with K=4)
-- `agent_4_3.pkl` (for 4x4 with K=3)
 
 ---
 
