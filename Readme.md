@@ -1,106 +1,127 @@
-# TicTacToe \(NxN\) with K-in-a-row using Two-Step Q-Learning
+# TicTacToe RL: Two-Step Q-Learning with Reward Shaping
 
-This repository implements a generalized Tic-Tac-Toe environment for an \(NxN\) board, where a player must align \(K\) marks in a row (horizontally, vertically, or diagonally) to win. We focus on **reinforcement learning** approaches, specifically **two-step Q-Learning** with **reward shaping** and an **aggressive opponent** for self-play in 10% of episodes.
+Welcome to our TicTacToe Reinforcement Learning project! Here we tackle the problem of training an RL agent to play an **\(N \times N\)** TicTacToe variant, where a player needs **K** in a row to win. This is significantly more challenging than the classic 3x3 TicTacToe for several reasons, especially when \(N > K\), because a simple 1-step Q-Learning agent often cannot "see" deep enough to block future threats in time.
 
-## Why this is Hard
+Below is a brief overview of **why** this problem is difficult and **how** we solve it via **two-step Q-Learning** with various reward-shaping techniques.
 
-In the classic \(3x3\) Tic-Tac-Toe with \(K=3\), simple one-step Q-Learning can eventually learn to block the opponent's immediate threat and/or create a winning alignment. However, when \(N > K\) (for example, a \(5x5\) board with \(K=4\)), **one-step** Q-Learning fails to see multi-step threats. Often, you need to **block** your opponent **two or more moves** in advance. A purely 1-step method:
+---
 
-- Only sees \(r_{t+1}\) or the immediate next state's Q-values.
-- Fails to anticipate that ignoring a partially formed diagonal can lead to a forced loss in 2-3 turns.
+## Why 1-step Q-Learning Fails for \(N > K\)
 
-## Our Solution: Two-Step Q-Learning + Reward Shaping
+- In standard 1-step Q-Learning, the update only looks at the immediate reward and then the best Q-value for the next state. 
+- This works **okay** for small boards (like 3x3 with K=3) because most threats can be identified and blocked in a single move. 
+- However, for boards where **N > K**, threats may develop over multiple moves. The agent needs to block or build sequences two or three moves in advance. Pure 1-step Q-Learning usually doesn't credit the correct actions with the correct outcomes if those outcomes occur multiple moves later.
 
-To address this, we employ a **two-step Q-Learning** approach, which incorporates:
+Hence, an agent trained only on immediate 1-step updates might consistently fail to block unstoppable threats unless it accidentally stumbles upon the right move. 
 
-1. **Two-step TD targets**:  
-   \[
-   Q(s_t, a_t) \leftarrow Q(s_t, a_t) \;+\; \alpha \Bigl[r_{t+1} + \gamma \, r_{t+2} + \gamma^2 \max_a Q(s_{t+2}, a) - Q(s_t, a_t)\Bigr].
-   \]
-   This allows the agent to learn from outcomes **two** moves away.
+---
 
-2. **Reward shaping** to encourage:
-   - **Blocking** an opponent's \(K-1\) or \(K-2\) threat (or penalize ignoring it).
-   - **Building**/extending your own line by +1 step.
+## Our Two-Step Q-Learning Approach
 
-3. **Aggressive opponent** in 10% of episodes, which forces the agent to handle real threats more often during self-play.
+To address the above, we implemented:
+- **Two-step Q-Learning**: We store transitions in a short buffer, and once we have two consecutive transitions for the same player, we perform an update with a 2-step return. This allows the agent to incorporate the reward from two steps ahead, making it more likely to learn critical "blocking" or "building" moves that pay off two turns later.
+- **Reward Shaping**: We add intermediate rewards and penalties for:
+  - Failing to block the opponent's nearly completed line (K-1, K-2, etc.).
+  - Extending our own line (gaining partial progress to K in a row).
+  - Penalizing the last move of the loser when the other side wins.
+- **Decaying Epsilon**: We begin training with some exploration (`epsilon_start`) and gradually reduce it to zero so that eventually, the agent exploits what it has learned.
 
-These changes significantly improve the agent's ability to see and defend multi-step threats, especially in boards where \(N>K\).
+As a result, the agent:
+1. Learns to prioritize blocking the opponent's potential lines.
+2. Learns to build its own lines effectively.
+3. Avoids purely local (1-step) traps by looking at consequences a couple of moves ahead.
 
-## Repository Structure
+---
 
-```
-.
-├── main.py               # Example 'main' script: creates env, agent, runs training & demo
-├── tictactoe.py          # The environment class (TicTacToe) for NxN, K-in-a-row
-├── agent.py              # The two-step Q-Learning shaping agent; plus 'choose_aggressive_action'
-├── utils.py              # Helper function canonical_state(...)
-├── train.py              # Training loop (self-play) and a demo_game(...) function
-├── README.md             # This file
-└── requirements.txt      # (Optional) dependencies list
-```
+## Repository Contents
 
-### Key Files
+Below is an outline of the files you will find in this repository:
 
-- **`tictactoe.py`**: Implements the environment.  
-  - Features *early termination* if neither player can still form \(K\).  
-  - `render()` method to animate the game.  
-- **`agent.py`**: Contains `TwoStepQLearningShapingAgent` class with two-step Q-Learning logic, shaping rewards, and an \(\epsilon\)-decay schedule. Also includes `choose_aggressive_action(...)`.  
-- **`train.py`**: The self-play training function `train_fixed_episodes(env, agent, ...)` that runs a certain number of episodes. Also has a `demo_game(...)` for a quick self-play demonstration.  
-- **`main.py`**: Shows how to instantiate environment + agent, run training, and do a final demonstration. This is a simple entry point for local usage.
+- **`tictactoe.py`**  
+  Contains the `TicTacToe` environment class, which implements an \(N \times N\) board with the logic for `step()`, checking winners, possible lines to form K in a row, and early detection of unwinnable states.
 
-## Example Usage
+- **`utils.py`**  
+  Contains helper functions such as `canonical_state(...)`.
 
-1. **Install requirements** (e.g. `numpy`, `matplotlib`, `tqdm`, etc.).  
+- **`agent.py`**  
+  Includes:
+  - `TwoStepQLearningShapingAgent`: The main Q-Learning agent with 2-step updates and shaping.
+  - `choose_aggressive_action(...)`: An optional function that simulates an "aggressive opponent" for O.
+
+- **`train.py`**  
+  - `train_fixed_episodes(...)`: A self-play training loop that also integrates an aggressive opponent in 10% of the episodes.
+  - `demo_game(...)`: Runs a quick self-play demonstration with the trained agent.
+
+- **`main.py`**  
+  - An example main script that demonstrates how to create the environment, instantiate the agent, train it, and optionally run a demo game.  
+
+We also have placeholders for **pretrained agents**:
+
+- `agent_3_3.pkl` (for 3x3 with K=3)
+- `agent_4_4.pkl` (for 4x4 with K=4)
+- `agent_5_4.pkl` (for 5x5 with K=4)
+- `agent_4_3.pkl` (for 4x4 with K=3)
+
+---
+
+## Usage
+
+To run this code locally:
+
+1. **Clone** or **download** this repository.
+
+2. **Install dependencies** (for example, using pip):
    ```bash
    pip install -r requirements.txt
    ```
-2. **Run `main.py`**  
+   or at least install `numpy`, `matplotlib`, and `tqdm`.
+
+3. **Run** `main.py`:
    ```bash
    python main.py
    ```
    This will:
-   - Create a 4x4 environment with `K=4`.
-   - Initialize a two-step Q-Learning agent.
-   - Train for 100k episodes (with 10% episodes featuring an aggressive O).
-   - Show a final demo game result in text and pop up a matplotlib animation if you have a GUI.
+   - Create an environment (default N=4, K=4).
+   - Instantiate the TwoStepQLearningShapingAgent.
+   - Train for a specified number of episodes (e.g. 100,000).
+   - Print the result of a demo self-play game.
+   - Display a matplotlib animation if you have a GUI environment. 
+
+To use a **pretrained agent**:
+
+- Place the `.pkl` file (e.g. `agent_4_4.pkl`) in an accessible folder.
+- Modify the code to load that pickle into the agent's `Q` dictionary before running the demo game. 
+- That way, you can skip training time.
+
+---
 
 ## Colab Notebook
 
-You can also check out our **Colab Notebook** version ([**Open in Colab**](https://colab.research.google.com/your-cute-link)) where we use **ipywidgets** to create an interactive form. In the Colab form, you can:
+If you'd like to run or demo the project in **Google Colab**, we have an **interactive notebook** with `ipywidgets` forms for choosing parameters (board size, number in a row, number of episodes, etc.), plus the ability to load pretrained agents from GitHub. 
 
-- Choose board size `N`, winning condition `K`.
-- Set training hyperparameters (`alpha`, `gamma`, \(\epsilon\)-decay, number of episodes).
-- Optionally load a **pretrained agent** from GitHub (for certain `(N,K)` combos).
-- Run a self-play demo or even **play manually** against the trained agent.
+[**Open the Colab Notebook here!**](https://colab.research.google.com/drive/1UCl0LNdFOJXsnsSumb6awv7aHiSWzAC6?usp=sharing)
 
-### Example ipywidgets Screenshot
+*(Replace the above link with an actual link to your Colab notebook once you create one.)*
 
-*(Placeholder for your screenshot!)*
+Below is a **placeholder** screenshot of the ipywidgets form we created:
 
 ```
-![Screenshot of the ipywidgets UI](docs/images/tictactoe_widgets.png)
+[Screenshot placeholder: a UI with fields for N, K, alpha, gamma, episodes, checkboxes for "Load pretrained", "Save agent", "Show demo", "Play vs Agent", etc.]
 ```
 
-## Pretrained Models
+---
 
-We provide pretrained models in `agents/` subfolder for some typical board sizes:
+## Why This Matters
 
-- **`agent_3_3.pkl`** – \(3\times3\), \(K=3\)
-- **`agent_4_4.pkl`** – \(4\times4\), \(K=4\)
-- **`agent_5_4.pkl`** – \(5\times5\), \(K=4\)
-- **`agent_4_3.pkl`** – \(4\times4\), \(K=3\)
+- **Classic** TicTacToe (3x3) is trivial for any search-based or RL agent. But **generalizing** to NxN with K in a row reveals the importance of multi-step lookahead or advanced reward shaping.
+- Pure 1-step Q-Learning fails to anticipate the 2+ moves needed to block or create lines. 
+- Our approach with **2-step Q-Learning** (and **aggressive shaping**) addresses these deeper tactical patterns, making the agent significantly better at large or near-large boards.
 
-They can be automatically downloaded by the Colab if you enable “Load pretrained from GitHub?” for those exact `(N, K)` combos.
+---
 
-## Why Two-Step is Essential
+## Contributing
 
-- **One-step** Q-Learning only looks at immediate reward and \(\max Q(s_{t+1}, a)\).  
-- If \(N > K\), you may need to block an opponent's threat *two* or more turns in advance. Otherwise, the agent doesn’t see the negative reward \(-1\) from losing until it’s too late.  
-- By using **two-step returns** or **reward shaping**, we propagate the “danger” signals earlier, so the agent learns to block more effectively.
-
-## License and Contributing
-
-You can use or modify this code according to the License in this repository (e.g., MIT). Feel free to open a Pull Request if you have improvements or bug fixes.
-
-Enjoy experimenting with larger boards, or new reward-shaping heuristics for more advanced tactics!
+Feel free to open issues or submit pull requests if you find bugs or want to improve the agent’s heuristics and shaping logic. We welcome enhancements like:
+- Multi-step expansions (3-step, n-step).
+- Further reward shaping improvements.
+- More thorough scheduling for exploration.
