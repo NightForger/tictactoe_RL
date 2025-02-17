@@ -2,7 +2,7 @@
 
 [**Open the Colab Notebook here!**](https://colab.research.google.com/drive/1UCl0LNdFOJXsnsSumb6awv7aHiSWzAC6?usp=sharing)
 
-Welcome to our TicTacToe Reinforcement Learning project! Here we tackle the problem of training an RL agent to play an **\(N \times N\)** TicTacToe variant, where a player needs **K** in a row to win. This is significantly more challenging than the classic 3x3 TicTacToe for several reasons, especially when \(N > K\), because a simple 1-step Q-Learning agent often cannot "see" deep enough to block future threats in time.
+Welcome to our TicTacToe Reinforcement Learning project! Here we tackle the problem of training an RL agent to play an **\(NxN\)** TicTacToe variant, where a player needs **K** in a row to win. This is significantly more challenging than the classic 3x3 TicTacToe for several reasons, especially when \(N > K\), because a simple 1-step Q-Learning agent often cannot "see" deep enough to block future threats in time.
 
 Below is a brief overview of **why** this problem is difficult and **how** we solve it via **two-step Q-Learning** with various reward-shaping techniques.
 
