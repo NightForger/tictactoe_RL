@@ -40,7 +40,7 @@ As a result, the agent:
 Below is an outline of the files you will find in this repository:
 
 - **`tictactoe.py`**  
-  Contains the `TicTacToe` environment class, which implements an \(N \times N\) board with the logic for `step()`, checking winners, possible lines to form K in a row, and early detection of unwinnable states.
+  Contains the `TicTacToe` environment class, which implements an \(NxN\) board with the logic for `step()`, checking winners, possible lines to form K in a row, and early detection of unwinnable states.
 
 - **`utils.py`**  
   Contains helper functions such as `canonical_state(...)`.
